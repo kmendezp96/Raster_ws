@@ -22,7 +22,8 @@ String renderer = P3D;
 
 void setup() {
   //use 2^n to change the dimensions
-  size(1024, 1024, renderer);
+  //frameRate(1);
+  size(512, 512, renderer);
   scene = new Scene(this);
   if (scene.is3D())
     scene.setType(Scene.Type.ORTHOGRAPHIC);
@@ -64,6 +65,7 @@ void draw() {
   pushStyle();
   scene.applyTransformation(frame);
   triangleRaster();
+  TriangleAntiAliassing();
   popStyle();
   popMatrix();
 }
@@ -73,20 +75,96 @@ void draw() {
 void triangleRaster() {
   // frame.coordinatesOf converts from world to frame
   // here we convert v1 to illustrate the idea
-  if (debug) {
+  stroke(0, 0, 255);
+
+  Vector pv1 = frame.coordinatesOf(v1);
+  Vector pv2 = frame.coordinatesOf(v2);
+  Vector pv3 = frame.coordinatesOf(v3);
+  int determinante = round(((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
+  //println(determinante);
+  
+  for (int i = - round(pow(2,n-1));i<round(pow(2,n-1));i++){
+    for (int j = - round(pow(2,n-1));j<round(pow(2,n-1)); j++){
+      int Cond1 =  ((round(pv1.y()) - round(pv2.y()))*i) + ((round(pv2.x()) - round(pv1.x()))*j) + (round(pv1.x())* round(pv2.y())) - (round(pv1.y())*round(pv2.x()));
+      int Cond2 =  ((round(pv2.y()) - round(pv3.y()))*i) + ((round(pv3.x()) - round(pv2.x()))*j) + (round(pv2.x())* round(pv3.y())) - (round(pv2.y())*round(pv3.x()));
+      int Cond3 =  ((round(pv3.y()) - round(pv1.y()))*i) + ((round(pv1.x()) - round(pv3.x()))*j) + (round(pv3.x())* round(pv1.y())) - (round(pv3.y())*round(pv1.x()));
+      //println  (v1.y() +" "+Cond2+" " + Cond3 + " "+i+" "+j);
+      if ((Cond1>0) && (Cond2>0) && (Cond3>0)  && (determinante>0)){
+        point(i,j);
+      }
+      else if ((Cond1<0) && (Cond2<0) && (Cond3<0) && (determinante<0)){
+        point(i,j);
+      }
+      
+    }
+  
+  }
+  /*if (debug) {
     pushStyle();
     stroke(255, 255, 0, 125);
-    point(round(frame.coordinatesOf(v1).x()), round(frame.coordinatesOf(v1).y()));
+    Vector projection = frame.coordinatesOf(v1);
+    point(round(projection.x()), round(projection.y()));
     popStyle();
+  }*/
+}
+
+void TriangleAntiAliassing(){
+  stroke(255, 0, 0);
+
+  Vector pv1 = frame.coordinatesOf(v1);
+  Vector pv2 = frame.coordinatesOf(v2);
+  Vector pv3 = frame.coordinatesOf(v3);
+  float determinante = (((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
+  //println(determinante);
+  int cercania = 15;
+  for (int i = - round(pow(2,n-1));i<round(pow(2,n-1));i++){
+    for (int j = - round(pow(2,n-1));j<round(pow(2,n-1)); j++){
+      float Cond1 =  (((pv1.y()) - (pv2.y()))*i) + (((pv2.x()) - (pv1.x()))*j) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
+      float Cond2 =  (((pv2.y()) - (pv3.y()))*i) + (((pv3.x()) - (pv2.x()))*j) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
+      float Cond3 =  (((pv3.y()) - (pv1.y()))*i) + (((pv1.x()) - (pv3.x()))*j) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
+      /*int Cond1 =  ((round(pv1.y()) - round(pv2.y()))*i) + ((round(pv2.x()) - round(pv1.x()))*j) + (round(pv1.x())* round(pv2.y())) - (round(pv1.y())*round(pv2.x()));
+      int Cond2 =  ((round(pv2.y()) - round(pv3.y()))*i) + ((round(pv3.x()) - round(pv2.x()))*j) + (round(pv2.x())* round(pv3.y())) - (round(pv2.y())*round(pv3.x()));
+      int Cond3 =  ((round(pv3.y()) - round(pv1.y()))*i) + ((round(pv1.x()) - round(pv3.x()))*j) + (round(pv3.x())* round(pv1.y())) - (round(pv3.y())*round(pv1.x()));*/
+      
+      //prueba 1, no funciona la idea es determinar un rango en el que puedan estar los valores, las pruebas muestran demasiado error
+      //println  (v1.y() +" "+Cond2+" " + Cond3 + " "+i+" "+j);
+      //if ((cercania>=Cond1 && Cond1>=-cercania) && (cercania>=Cond1 && Cond2>=-cercania) && (cercania>=Cond3 && Cond3>=-cercania)  && (cercania>=determinante && determinante>=-cercania)){
+      //if ((Cond1==1 || Cond1==0 || Cond1==-1) && (Cond2==1 || Cond2==0 || Cond2==-1) && (Cond3==1 || Cond3==0 || Cond3==-1)  && (determinante==1 || determinante==0 || determinante==-1)){
+        //println  (Cond1 +" "+Cond2+" " + Cond3 + " "+i+" "+j);
+        //point(i,j);
+      //}else if ((i==7) && (j==3)){
+        //println  (Cond1 +" "+Cond2+" " + Cond3 + " "+determinante);
+      //}
+      //else if ((Cond1==0) && (Cond2==0) && (Cond3==0) && (determinante<=0)){
+        //point(i,j);
+      //}
+      // si cumplen al menos dos de las 3 condiciones, es aun mas inexacto
+      if (determinante>0){
+        if  (((Cond1>=0) && (Cond2>=0) && (Cond3<=0)) || ((Cond1>=0) && (Cond3>=0) && (Cond2<=0)) || ((Cond2>=0) && (Cond3>=0) && (Cond1<=0))){
+          point(i,j);
+        }
+      
+      }else{
+        if  (((Cond1<=0) && (Cond2<=0) && (Cond3>=0)) || ((Cond1<=0) && (Cond3<=0) && (Cond2>=0)) || ((Cond2<=0) && (Cond3<=0) && (Cond1>=0))){
+          point(i,j);
+        }
+      }
+      
+    }
+  
   }
+
 }
 
 void randomizeTriangle() {
   int low = -width/2;
   int high = width/2;
-  v1 = new Vector(random(low, high), random(low, high));
-  v2 = new Vector(random(low, high), random(low, high));
-  v3 = new Vector(random(low, high), random(low, high));
+  v1 = new Vector (90,240);
+  v2 = new Vector (200,180);
+  v3 = new Vector (120,60);
+  //v1 = new Vector(random(low, high), random(low, high));
+  //v2 = new Vector(random(low, high), random(low, high));
+  //v3 = new Vector(random(low, high), random(low, high));
 }
 
 void drawTriangleHint() {
@@ -96,11 +174,19 @@ void drawTriangleHint() {
   stroke(255, 0, 0);
   triangle(v1.x(), v1.y(), v2.x(), v2.y(), v3.x(), v3.y());
   strokeWeight(5);
-  stroke(0, 255, 255);
+  stroke(0, 0, 255);
   point(v1.x(), v1.y());
+  stroke(0, 255, 0);
   point(v2.x(), v2.y());
+  stroke(255, 0, 0);
   point(v3.x(), v3.y());
+  
+  
+  stroke (255,255,255);
+  point(0,0);
   popStyle();
+  
+  
 }
 
 void spin() {
