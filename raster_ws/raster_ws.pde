@@ -139,13 +139,30 @@ void multisampling( ){
           float Cond2 =  (((pv2.y()) - (pv3.y()))*pointx) + (((pv3.x()) - (pv2.x()))*pointy) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
           float Cond3 =  (((pv3.y()) - (pv1.y()))*pointx) + (((pv1.x()) - (pv3.x()))*pointy) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
           if ((Cond1>0) && (Cond2>0) && (Cond3>0)  && (determinante>0)){
+            contador = contador+1;
             circle_raster( pointx, pointy );
           }
           else if ((Cond1<0) && (Cond2<0) && (Cond3<0) && (determinante<0)){
+            contador = contador+1;
             circle_raster( pointx, pointy );
           }
             
         }   
+      }
+      //si en un cuadrado algun punto quedo por dentro y algun otro por fuera
+      if (contador>0 && contador<4){
+        //vuelvo a recorrer pintando todo de azul, cambiar estos dos ciclos por un pintado en el centro del cuadrado
+        for ( float i = 0; i < 2; i++ ) {
+          for ( float j = 0; j < 2; j++ ) {
+            float pointx = x + i / 2 + 0.25;
+            float pointy = y + j / 2 + 0.25;
+            stroke(0, 0, 255);
+            strokeWeight(0.5);
+            point( pointx, pointy);
+            
+            }
+        }
+      
       }
     }
   }
