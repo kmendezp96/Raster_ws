@@ -151,8 +151,13 @@ void multisampling( ){
       }
       //si en un cuadrado algun punto quedo por dentro y algun otro por fuera
       if (contador>0 && contador<4){
+        float pointx = x  + 0.5;
+        float pointy = y + 0.5;
+        stroke(0, 0, 255);
+        strokeWeight(0.5);
+        point( pointx, pointy);
         //vuelvo a recorrer pintando todo de azul, cambiar estos dos ciclos por un pintado en el centro del cuadrado
-        for ( float i = 0; i < 2; i++ ) {
+        /*for ( float i = 0; i < 2; i++ ) {
           for ( float j = 0; j < 2; j++ ) {
             float pointx = x + i / 2 + 0.25;
             float pointy = y + j / 2 + 0.25;
@@ -161,7 +166,7 @@ void multisampling( ){
             point( pointx, pointy);
             
             }
-        }
+        }*/
       
       }
     }
