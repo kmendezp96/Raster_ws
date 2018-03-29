@@ -20,6 +20,14 @@ boolean debug = true;
 // 3. Use FX2D, JAVA2D, P2D or P3D
 String renderer = P3D;
 
+//Triangle coordinates x and y
+float v1x = 0.0;
+float v2x = 0.0;
+float v3x = 0.0;
+float v1y = 0.0;
+float v2y = 0.0;
+float v3y = 0.0;
+
 void setup() {
   //use 2^n to change the dimensions
   //frameRate(1);
@@ -65,9 +73,11 @@ void draw() {
   pushStyle();
   scene.applyTransformation(frame);
   triangleRaster();
-  TriangleAntiAliassing();
+  multisampling();
+  //antialiasing();
   popStyle();
   popMatrix();
+  
 }
 
 // Implement this function to rasterize the triangle.
@@ -108,63 +118,89 @@ void triangleRaster() {
   }*/
 }
 
-void TriangleAntiAliassing(){
-  stroke(255, 0, 0);
-
+void multisampling( ){
+  
+  int size = (int) pow( 2, n ) / 2;
+  //Vector pv1 = (v1);
+  //Vector pv2 = (v2);
+  //Vector pv3 = (v3);
   Vector pv1 = frame.coordinatesOf(v1);
   Vector pv2 = frame.coordinatesOf(v2);
   Vector pv3 = frame.coordinatesOf(v3);
   float determinante = (((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
-  //println(determinante);
-  int cercania = 15;
-  for (int i = - round(pow(2,n-1));i<round(pow(2,n-1));i++){
-    for (int j = - round(pow(2,n-1));j<round(pow(2,n-1)); j++){
-      float Cond1 =  (((pv1.y()) - (pv2.y()))*i) + (((pv2.x()) - (pv1.x()))*j) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
-      float Cond2 =  (((pv2.y()) - (pv3.y()))*i) + (((pv3.x()) - (pv2.x()))*j) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
-      float Cond3 =  (((pv3.y()) - (pv1.y()))*i) + (((pv1.x()) - (pv3.x()))*j) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
-      /*int Cond1 =  ((round(pv1.y()) - round(pv2.y()))*i) + ((round(pv2.x()) - round(pv1.x()))*j) + (round(pv1.x())* round(pv2.y())) - (round(pv1.y())*round(pv2.x()));
-      int Cond2 =  ((round(pv2.y()) - round(pv3.y()))*i) + ((round(pv3.x()) - round(pv2.x()))*j) + (round(pv2.x())* round(pv3.y())) - (round(pv2.y())*round(pv3.x()));
-      int Cond3 =  ((round(pv3.y()) - round(pv1.y()))*i) + ((round(pv1.x()) - round(pv3.x()))*j) + (round(pv3.x())* round(pv1.y())) - (round(pv3.y())*round(pv1.x()));*/
-      
-      //prueba 1, no funciona la idea es determinar un rango en el que puedan estar los valores, las pruebas muestran demasiado error
-      //println  (v1.y() +" "+Cond2+" " + Cond3 + " "+i+" "+j);
-      //if ((cercania>=Cond1 && Cond1>=-cercania) && (cercania>=Cond1 && Cond2>=-cercania) && (cercania>=Cond3 && Cond3>=-cercania)  && (cercania>=determinante && determinante>=-cercania)){
-      //if ((Cond1==1 || Cond1==0 || Cond1==-1) && (Cond2==1 || Cond2==0 || Cond2==-1) && (Cond3==1 || Cond3==0 || Cond3==-1)  && (determinante==1 || determinante==0 || determinante==-1)){
-        //println  (Cond1 +" "+Cond2+" " + Cond3 + " "+i+" "+j);
-        //point(i,j);
-      //}else if ((i==7) && (j==3)){
-        //println  (Cond1 +" "+Cond2+" " + Cond3 + " "+determinante);
-      //}
-      //else if ((Cond1==0) && (Cond2==0) && (Cond3==0) && (determinante<=0)){
-        //point(i,j);
-      //}
-      // si cumplen al menos dos de las 3 condiciones, es aun mas inexacto
-      if (determinante>0){
-        if  (((Cond1>=0) && (Cond2>=0) && (Cond3<=0)) || ((Cond1>=0) && (Cond3>=0) && (Cond2<=0)) || ((Cond2>=0) && (Cond3>=0) && (Cond1<=0))){
-          point(i,j);
-        }
-      
-      }else{
-        if  (((Cond1<=0) && (Cond2<=0) && (Cond3>=0)) || ((Cond1<=0) && (Cond3<=0) && (Cond2>=0)) || ((Cond2<=0) && (Cond3<=0) && (Cond1>=0))){
-          point(i,j);
-        }
+  for ( int x = -size; x <= size; x++ ) {
+    for (  int y = -size; y <= size; y++ ) {
+      int contador = 0;
+      for ( float i = 0; i < 2; i++ ) {
+        for ( float j = 0; j < 2; j++ ) {
+          float pointx = x + i / 2 + 0.25;
+          float pointy = y + j / 2 + 0.25;
+          float Cond1 =  (((pv1.y()) - (pv2.y()))*pointx) + (((pv2.x()) - (pv1.x()))*pointy) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
+          float Cond2 =  (((pv2.y()) - (pv3.y()))*pointx) + (((pv3.x()) - (pv2.x()))*pointy) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
+          float Cond3 =  (((pv3.y()) - (pv1.y()))*pointx) + (((pv1.x()) - (pv3.x()))*pointy) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
+          if ((Cond1>0) && (Cond2>0) && (Cond3>0)  && (determinante>0)){
+            circle_raster( pointx, pointy );
+          }
+          else if ((Cond1<0) && (Cond2<0) && (Cond3<0) && (determinante<0)){
+            circle_raster( pointx, pointy );
+          }
+            
+        }   
       }
-      
     }
-  
+  }
+}
+
+void antialiasing(){
+  int size = (int) pow( 2, n ) / 2;
+  Vector pv1 = (v1);
+  Vector pv2 = (v2);
+  Vector pv3 = (v3);
+  //Vector pv1 = frame.coordinatesOf(v1);
+  //Vector pv2 = frame.coordinatesOf(v2);
+  //Vector pv3 = frame.coordinatesOf(v3);
+  float determinante = (((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
+  for ( int x = -size; x <= size; x++ ) {
+    for (  int y = -size; y <= size; y++ ) {
+      for ( float i = 0; i < 2; i++ ) {
+        for ( float j = 0; j < 2; j++ ) {
+          float pointx = x + i / 2 + 0.25;
+          float pointy = y + j / 2 + 0.25;
+          float Cond1 =  (((pv1.y()) - (pv2.y()))*pointx) + (((pv2.x()) - (pv1.x()))*pointy) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
+          float Cond2 =  (((pv2.y()) - (pv3.y()))*pointx) + (((pv3.x()) - (pv2.x()))*pointy) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
+          float Cond3 =  (((pv3.y()) - (pv1.y()))*pointx) + (((pv1.x()) - (pv3.x()))*pointy) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
+          if ((1>Cond1 && Cond1>-1) || (1>Cond1 && Cond1>-1) || (1>Cond1 && Cond1>-1)){
+            circle_raster( pointx, pointy );
+          }
+            
+        }   
+      }
+    }
   }
 
+}
+
+void circle_raster( float pointx, float pointy ) {
+  pushStyle();
+  stroke(247, 176, 243);
+  //point( pointx, pointy);
+  popStyle();
+  pushStyle();
+  stroke(0, 0, 255);
+  strokeWeight(0.5);
+  point( pointx, pointy);
+  popStyle();
 }
 
 void randomizeTriangle() {
   int low = -width/2;
   int high = width/2;
-  v1 = new Vector (90,240);
-  v2 = new Vector (200,180);
-  v3 = new Vector (120,60);
-  //v1 = new Vector(random(low, high), random(low, high));
-  //v2 = new Vector(random(low, high), random(low, high));
-  //v3 = new Vector(random(low, high), random(low, high));
+  //v1 = new Vector (90,240);
+  //v2 = new Vector (200,180);
+  //v3 = new Vector (120,60);
+  v1 = new Vector(random(low, high), random(low, high));
+  v2 = new Vector(random(low, high), random(low, high));
+  v3 = new Vector(random(low, high), random(low, high));
 }
 
 void drawTriangleHint() {
