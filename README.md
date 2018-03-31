@@ -22,11 +22,19 @@ Complete la tabla:
 
 | Integrante | github nick |
 |------------|-------------|
-|            |             |
+| Yessica Chautá Insuasty | ykchautai |
+| Andrés Sánchez Lemus | andfsanchezlem |
+| Kevin Mendez Páez | kmendezp96 |
 
 ## Discusión
 
 Describa los resultados obtenidos. Qué técnicas de anti-aliasing y shading se exploraron? Adjunte las referencias. Discuta las dificultades encontradas.
+
+Basándonos en la técnica de multialiasing explicada en [esta](https://learnopengl.com/Advanced-OpenGL/Anti-Aliasing) página. Se toman como puntos iniciales los centros de cada pixel de acuerdo a la cuadrícula inicial y de acuerdo a las ecuaciones baricéntricas planteadas se define si se encuentran o no dentro del triángulo al que se le va a aplicar el efecto. Como segundo criterio se evalúan 4 puntos dentro del mismo pixel distribuidos equitativamente para validar cuáles de ellos se encuentran dentro del triángulo y mejorar el rango tenido en cuenta para el perfilado del triángulo. Para colorear también se tiene en cuenta que cuántos más puntos haya dentro del triángulo, más intenso y claro será el color a mostrar.
+
+Para el shading se usó [esta](https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates) referencia, con la cual se define cada vértice del triángulo como cada una de las coordenadas RGB y un punto dentro del triángulo, y usando las coordenadas baricéntricas se asignan los colores del resto de la imagen usando la fórmula general color = (u, v, 1-u-v) donde u y v son dos de las caras que forman las uniones de los vértices con el punto central.
+
+Como algunas de las dificultades se tiene elegir cuáles son los métodos adecuados y las reglas que se deben seguir para obtener los mejores resultados a la hora de hacer un proceso de rasterización del triángulo. Entender cómo funcionan las coordenadas baricéntricas para realizar los cálculos y aplicarlas de manera conjunta al problema de anti-aliasing y shading y aplicar la teoría a un problema real no se hace tan evidente.
 
 ## Entrega
 
