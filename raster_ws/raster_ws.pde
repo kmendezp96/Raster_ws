@@ -6,9 +6,11 @@ import frames.processing.*;
 Scene scene;
 Frame frame;
 Vector v1, v2, v3;
+
 // timing
 TimingTask spinningTask;
 boolean yDirection;
+
 // scaling is a power of 2
 int n = 4;
 
@@ -16,17 +18,12 @@ int n = 4;
 boolean triangleHint = true;
 boolean gridHint = true;
 boolean debug = true;
+boolean raster = true;
+boolean aliasing = false;
+boolean shading = true;
 
 // 3. Use FX2D, JAVA2D, P2D or P3D
 String renderer = P3D;
-
-//Triangle coordinates x and y
-float v1x = 0.0;
-float v2x = 0.0;
-float v3x = 0.0;
-float v1y = 0.0;
-float v2y = 0.0;
-float v3y = 0.0;
 
 void setup() {
   //use 2^n to change the dimensions
@@ -72,9 +69,8 @@ void draw() {
   pushMatrix();
   pushStyle();
   scene.applyTransformation(frame);
-  triangleRaster();
-  multisampling();
-  //antialiasing();
+  if(raster) triangleRaster();
+  if(aliasing) multisampling();
   popStyle();
   popMatrix();
   
@@ -90,47 +86,45 @@ void triangleRaster() {
   Vector pv1 = frame.coordinatesOf(v1);
   Vector pv2 = frame.coordinatesOf(v2);
   Vector pv3 = frame.coordinatesOf(v3);
-  int determinante = round(((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
+  float determinante =(((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
   //println(determinante);
+ 
   
-  for (int i = - round(pow(2,n-1));i<round(pow(2,n-1));i++){
-    for (int j = - round(pow(2,n-1));j<round(pow(2,n-1)); j++){
-      int Cond1 =  ((round(pv1.y()) - round(pv2.y()))*i) + ((round(pv2.x()) - round(pv1.x()))*j) + (round(pv1.x())* round(pv2.y())) - (round(pv1.y())*round(pv2.x()));
-      int Cond2 =  ((round(pv2.y()) - round(pv3.y()))*i) + ((round(pv3.x()) - round(pv2.x()))*j) + (round(pv2.x())* round(pv3.y())) - (round(pv2.y())*round(pv3.x()));
-      int Cond3 =  ((round(pv3.y()) - round(pv1.y()))*i) + ((round(pv1.x()) - round(pv3.x()))*j) + (round(pv3.x())* round(pv1.y())) - (round(pv3.y())*round(pv1.x()));
+  for (float i = -(pow(2,n-1));i<(pow(2,n-1));i++){
+    for (float j = -(pow(2,n-1));j<(pow(2,n-1)); j++){
+      float pointx = i  + 0.5;
+      float pointy = j + 0.5;
+      //circleCenter(pointx,pointy);
+      float Cond1 =  (((pv1.y()) -(pv2.y()))*pointx) + (((pv2.x()) -(pv1.x()))*pointy) + ((pv1.x())*(pv2.y())) - ((pv1.y())*(pv2.x()));
+      float Cond2 =  (((pv2.y()) -(pv3.y()))*pointx) + (((pv3.x()) -(pv2.x()))*pointy) + ((pv2.x())*(pv3.y())) - ((pv2.y())*(pv3.x()));
+      float Cond3 =  (((pv3.y()) -(pv1.y()))*pointx) + (((pv1.x()) -(pv3.x()))*pointy) + ((pv3.x())*(pv1.y())) - ((pv3.y())*(pv1.x()));
       //println  (v1.y() +" "+Cond2+" " + Cond3 + " "+i+" "+j);
-      if ((Cond1>0) && (Cond2>0) && (Cond3>0)  && (determinante>0)){
-        point(i,j);
+      color c = round(colorFun(pv1, pv2, pv3, pointx , pointy));
+      if ((Cond1>=0) && (Cond2>=0) && (Cond3>=0)  && (determinante>0)){
+        circleRaster(pointx,pointy,red(c),green(c),blue(c));
       }
-      else if ((Cond1<0) && (Cond2<0) && (Cond3<0) && (determinante<0)){
-        point(i,j);
-      }
-      
+      else if ((Cond1<=0) && (Cond2<=0) && (Cond3<=0) && (determinante<0)){
+        circleRaster(pointx,pointy,red(c),green(c),blue(c));
+      }  
     }
-  
   }
-  /*if (debug) {
-    pushStyle();
-    stroke(255, 255, 0, 125);
-    Vector projection = frame.coordinatesOf(v1);
-    point(round(projection.x()), round(projection.y()));
-    popStyle();
-  }*/
 }
 
 void multisampling( ){
   
-  int size = (int) pow( 2, n ) / 2;
-  //Vector pv1 = (v1);
-  //Vector pv2 = (v2);
-  //Vector pv3 = (v3);
+  int size = (int) pow( 2, n-1);
   Vector pv1 = frame.coordinatesOf(v1);
   Vector pv2 = frame.coordinatesOf(v2);
   Vector pv3 = frame.coordinatesOf(v3);
+  color c;
   float determinante = (((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
   for ( int x = -size; x <= size; x++ ) {
     for (  int y = -size; y <= size; y++ ) {
+      float centerx = x  + 0.5;
+      float centery = y + 0.5;
       int contador = 0;
+      
+      //circleCenter(pointx,pointy);
       for ( float i = 0; i < 2; i++ ) {
         for ( float j = 0; j < 2; j++ ) {
           float pointx = x + i / 2 + 0.25;
@@ -138,78 +132,80 @@ void multisampling( ){
           float Cond1 =  (((pv1.y()) - (pv2.y()))*pointx) + (((pv2.x()) - (pv1.x()))*pointy) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
           float Cond2 =  (((pv2.y()) - (pv3.y()))*pointx) + (((pv3.x()) - (pv2.x()))*pointy) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
           float Cond3 =  (((pv3.y()) - (pv1.y()))*pointx) + (((pv1.x()) - (pv3.x()))*pointy) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
-          if ((Cond1>0) && (Cond2>0) && (Cond3>0)  && (determinante>0)){
+          c = round(colorFun(pv1, pv2, pv3, pointx , pointy));
+          if ((Cond1>=0) && (Cond2>=0) && (Cond3>=0)  && (determinante>0)){
             contador = contador+1;
-            circle_raster( pointx, pointy );
+            circleCenter(centerx,centery,red(c),green(c),blue(c));       
+            circleAliasing(pointx,pointy,red(c),green(c),blue(c) );
           }
           else if ((Cond1<0) && (Cond2<0) && (Cond3<0) && (determinante<0)){
             contador = contador+1;
-            circle_raster( pointx, pointy );
+            circleCenter(centerx,centery,red(c),green(c),blue(c));
+            circleAliasing( pointx,pointy,red(c),green(c),blue(c));
           }
             
         }   
       }
       //si en un cuadrado algun punto quedo por dentro y algun otro por fuera
       if (contador>0 && contador<4){
-        float pointx = x  + 0.5;
-        float pointy = y + 0.5;
-        stroke(0, 0, 255);
-        strokeWeight(0.5);
-        point( pointx, pointy);
-        //vuelvo a recorrer pintando todo de azul, cambiar estos dos ciclos por un pintado en el centro del cuadrado
-        /*for ( float i = 0; i < 2; i++ ) {
+       for ( float i = 0; i < 2; i++ ) {
           for ( float j = 0; j < 2; j++ ) {
             float pointx = x + i / 2 + 0.25;
             float pointy = y + j / 2 + 0.25;
-            stroke(0, 0, 255);
-            strokeWeight(0.5);
-            point( pointx, pointy);
-            
-            }
-        }*/
-      
-      }
-    }
-  }
-}
-
-void antialiasing(){
-  int size = (int) pow( 2, n ) / 2;
-  Vector pv1 = (v1);
-  Vector pv2 = (v2);
-  Vector pv3 = (v3);
-  //Vector pv1 = frame.coordinatesOf(v1);
-  //Vector pv2 = frame.coordinatesOf(v2);
-  //Vector pv3 = frame.coordinatesOf(v3);
-  float determinante = (((pv2.x() - pv1.x())*(pv3.y() - pv1.y())) - ((pv2.y() - pv1.y())*(pv3.x() - pv1.x())));
-  for ( int x = -size; x <= size; x++ ) {
-    for (  int y = -size; y <= size; y++ ) {
-      for ( float i = 0; i < 2; i++ ) {
-        for ( float j = 0; j < 2; j++ ) {
-          float pointx = x + i / 2 + 0.25;
-          float pointy = y + j / 2 + 0.25;
-          float Cond1 =  (((pv1.y()) - (pv2.y()))*pointx) + (((pv2.x()) - (pv1.x()))*pointy) + ((pv1.x())* (pv2.y())) - ((pv1.y())*(pv2.x()));
-          float Cond2 =  (((pv2.y()) - (pv3.y()))*pointx) + (((pv3.x()) - (pv2.x()))*pointy) + ((pv2.x())* (pv3.y())) - ((pv2.y())*(pv3.x()));
-          float Cond3 =  (((pv3.y()) - (pv1.y()))*pointx) + (((pv1.x()) - (pv3.x()))*pointy) + ((pv3.x())* (pv1.y())) - ((pv3.y())*(pv1.x()));
-          if ((1>Cond1 && Cond1>-1) || (1>Cond1 && Cond1>-1) || (1>Cond1 && Cond1>-1)){
-            circle_raster( pointx, pointy );
+            c = round(colorFun(pv1, pv2, pv3, pointx , pointy));
+            circleAliasing( pointx,pointy,red(c),green(c),blue(c));
           }
-            
-        }   
+        }      
       }
     }
   }
-
 }
 
-void circle_raster( float pointx, float pointy ) {
+float colorFun(Vector pv1, Vector pv2, Vector pv3, float pointx , float pointy){
+  float e1 = eFun(pv1.x(),pv1.y(),pointx,pointy,pv2.x(),pv2.y()) ;
+  float e2 = eFun(pv1.x(),pv1.y(),pointx,pointy,pv2.x(),pv2.y()) ;
+  float e3 = eFun(pv1.x(),pv1.y(),pointx,pointy,pv3.x(),pv3.y());
+  float e4 = eFun(pv1.x(),pv1.y(),pv2.x(),pv2.y(),pv3.x(),pv3.y());
+  float u = e1/e4;
+  float v = e2/e4;
+  float w = e3/e4;
+  color c = color(u*255,v*255,w*255);
+  //println(red(c));
+  return c;
+}
+
+float eFun (float x1, float y1,float x2,float y2, float x3, float y3){
+    return abs((x1 - x3) * (y2 - y3) - (x2 - x3) * (y1 - y3));
+}
+
+void circleCenter( float pointx, float pointy ,float red, float green, float blue) {
   pushStyle();
-  stroke(247, 176, 243);
-  //point( pointx, pointy);
+  if(shading) stroke(red, green, blue,50);
+  else stroke(255, 255, 0,50);
+  strokeWeight(1);
+  point( pointx, pointy);
+  popStyle();
+}
+
+void circleRaster( float pointx, float pointy, float red, float green, float blue ) {
+  pushStyle();
+  if(shading) stroke(red, green, blue);
+  else stroke(255, 255, 0);
+  strokeWeight(1);
+  point( pointx, pointy);
   popStyle();
   pushStyle();
-  stroke(0, 0, 255);
-  strokeWeight(0.5);
+  stroke(0, 0, 243);
+  strokeWeight(0.15);
+  point( pointx, pointy);
+  popStyle();
+}
+
+void circleAliasing( float pointx, float pointy, float red, float green, float blue ) {
+  pushStyle();
+  if(shading) stroke(red, green, blue);
+  else stroke(0, 0, 200);
+  strokeWeight(0.15);
   point( pointx, pointy);
   popStyle();
 }
@@ -278,4 +274,10 @@ void keyPressed() {
       spinningTask.run(20);
   if (key == 'y')
     yDirection = !yDirection;
+  if(key == 'a')
+    aliasing = !aliasing;
+  if(key == 's')
+    shading = !shading;
+  if(key == 'z')
+    raster = !raster;
 }
